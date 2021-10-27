@@ -19,8 +19,7 @@ class CriarTabelaAgenda extends Migration
             $table->string('email');
             $table->string('telefone');
             $table->string('cep');
-            $table->string('endereco');
-            $table->string('numero');
+            $table->string('rua');
             $table->string('bairro');
             $table->string('cidade');
             $table->string('estado');

@@ -15,10 +15,11 @@ class Agenda extends Model
         'email',
         'telefone',
         'cep',
-        'endereco',
-        'numero',
+        'rua',
         'bairro',
         'cidade',
         'estado',
+
     ];
+
 }

@@ -15,107 +15,132 @@
         </div>
     @endif
 
+    <!-- Adicionando JQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+            crossorigin="anonymous"></script>
+
+    <!-- Adicionando Javascript -->
     <script>
 
-        'use strict';
+        $(document).ready(function() {
 
-        const limparFormulario = (endereco) =>{
-            document.getElementById('endereco').value = '';
-            document.getElementById('bairro').value = '';
-            document.getElementById('cidade').value = '';
-            document.getElementById('estado').value = '';
-        }
-
-
-        const preencherFormulario = (endereco) =>{
-            document.getElementById('endereco').value = endereco.logradouro;
-            document.getElementById('bairro').value = endereco.bairro;
-            document.getElementById('cidade').value = endereco.localidade;
-            document.getElementById('estado').value = endereco.uf;
-        }
-
-
-        const eNumero = (numero) => /^[0-9]+$/.test(numero);
-
-        const cepValido = (cep) => cep.length == 8 && eNumero(cep);
-
-        const pesquisarCep = async() => {
-            limparFormulario();
-
-            const cep = document.getElementById('cep').value;
-            const url = `https://viacep.com.br/ws/${cep}/json/`;
-            if (cepValido(cep)){
-                const dados = await fetch(url);
-                const endereco = await dados.json();
-                if (endereco.hasOwnProperty('erro')){
-                    document.getElementById('endereco').value = 'CEP não encontrado!';
-                }else {
-                    preencherFormulario(endereco);
-                }
-            }else{
-                document.getElementById('endereco').value = 'CEP incorreto!';
+            function limpa_formulário_cep() {
+                // Limpa valores do formulário de cep.
+                $("#rua").val("");
+                $("#bairro").val("");
+                $("#cidade").val("");
+                $("#uf").val("");
+                $("#ibge").val("");
             }
 
-        }
+            //Quando o campo cep perde o foco.
+            $("#cep").blur(function() {
 
-        document.getElementById('cep')
-            .addEventListener('focusout',pesquisarCep);
+                //Nova variável "cep" somente com dígitos.
+                var cep = $(this).val().replace(/\D/g, '');
+
+                //Verifica se campo cep possui valor informado.
+                if (cep != "") {
+
+                    //Expressão regular para validar o CEP.
+                    var validacep = /^[0-9]{8}$/;
+
+                    //Valida o formato do CEP.
+                    if(validacep.test(cep)) {
+
+                        //Preenche os campos com "..." enquanto consulta webservice.
+                        $("#rua").val("...");
+                        $("#bairro").val("...");
+                        $("#cidade").val("...");
+                        $("#uf").val("...");
+                        $("#ibge").val("...");
+
+                        //Consulta o webservice viacep.com.br/
+                        $.getJSON("https://viacep.com.br/ws/"+ cep +"/json/?callback=?", function(dados) {
+
+                            if (!("erro" in dados)) {
+                                //Atualiza os campos com os valores da consulta.
+                                $("#rua").val(dados.logradouro);
+                                $("#bairro").val(dados.bairro);
+                                $("#cidade").val(dados.localidade);
+                                $("#uf").val(dados.uf);
+                                $("#ibge").val(dados.ibge);
+                            } //end if.
+                            else {
+                                //CEP pesquisado não foi encontrado.
+                                limpa_formulário_cep();
+                                alert("CEP não encontrado.");
+                            }
+                        });
+                    } //end if.
+                    else {
+                        //cep é inválido.
+                        limpa_formulário_cep();
+                        alert("Formato de CEP inválido.");
+                    }
+                } //end if.
+                else {
+                    //cep sem valor, limpa formulário.
+                    limpa_formulário_cep();
+                }
+            });
+        });
 
     </script>
 
+
+
     <form action="/agenda/criar" method="post" enctype="multipart/form-data">
-        @csrf
-        <div class="form-group">
-            <label for="image">Selecione a foto:</label>
-            <input type="file"  name="photo" class="form-control-file">
-        </div>
-        <div class="form-group">
-            <label for="nome">Nome</label>
-            <input type="text" class="form-control" name="nome" id="nome">
-        </div>
+            @csrf
+            <div class="row">
+                <div class="form-group col-md-10">
+                    <label for="nome">Nome</label>
+                    <input type="text" class="form-control" name="nome" id="nome">
+                </div>
 
-        <div class="form-row">
+    {{--            <div class="col col-3">--}}
+    {{--            <label for="nome">Foto de perfil</label>--}}
+    {{--            <input type="file" class="form-control" name="capa" id="capa">--}}
+    {{--        </div>--}}
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="E-mail">E-mail</label>
+                    <input type="email" class="form-control" name="email" id="email" placeholder="Email">
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="Telefone">Telefone</label>
+                    <input type="text" class="form-control" name="telefone" id="telefone" placeholder="telefone">
+                </div>
+
+            <div class="form-group col-md-4">
+                <label for="CEP">CEP</label>
+                <input name="cep" type="text" id="cep" class="form-control"  value="" size="10" maxlength="9" required>
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="rua">Rua</label>
+                <input name="rua" type="text" id="rua" class="form-control" size="60"required>
+            </div>
+
             <div class="form-group col-md-6">
-                <label for="E-mail">E-mail</label>
-                <input type="email" class="form-control" name="email" id="email" placeholder="Email">
-            </div>
-            <div class="form-group col-md-6">
-                <label for="Telefone">Telefone</label>
-                <input type="text" class="form-control" name="telefone" id="Telefone" placeholder="Telefone">
+                <label for="bairro">Bairro</label>
+                <input name="bairro" type="text" id="bairro" class="form-control" size="40"required>
             </div>
 
-        <div class="form-group col-md-2">
-            <label for="CEP">CEP</label>
-            <input type="text" class="form-control" name="cep" id="cep" value="" size="10" maxlength="9">
-        </div>
-
-        <div class="form-group">
-            <label for="endereco">Endereço</label>
-            <input type="text" class="form-control" name="endereco" id="endereco" size="60">
-        </div>
-
-        <div class="form-group">
-            <label for="numero">Número</label>
-            <input type="text" class="form-control" name="numero" id="numero" size="40">
-        </div>
-
-        <div class="form-group">
-            <label for="bairro">Bairro</label>
-            <input type="text" class="form-control" name="bairro" id="bairro" size="40">
-        </div>
-
-        <div class="form-group col-md-4">
-            <label for="cidade">Cidade</label>
-            <input name="cidade" id="cidade" class="form-control" size="2">
-        </div>
-
-         <div class="form-group col-md-4">
-           <label for="estado">Estado</label>
-         <input name="estado" id="estado" class="form-control">
+            <div class="form-group col-md-3">
+                <label for="cidade">Cidade</label>
+                <input name="cidade" id="cidade" class="form-control" size="2"required>
             </div>
 
-        </div>
+             <div class="form-group col-md-3">
+               <label for="estado">Estado</label>
+             <input name="estado" id="uf" class="form-control"required>
+                </div>
 
-        <button class="btn btn-primary" type="submit">Adicionar</button>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Adicionar</button>
     </form>
 @endsection

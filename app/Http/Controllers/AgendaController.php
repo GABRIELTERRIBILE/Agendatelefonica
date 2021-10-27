@@ -6,11 +6,17 @@ namespace App\Http\Controllers;
 use App\Agenda;
 use App\Http\Requests\AgendaFormRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 
 class AgendaController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     public function index(Request $request) {
+
         $agenda = Agenda::query()
             ->orderBy('nome')
             ->get();
@@ -27,20 +33,56 @@ class AgendaController extends Controller
 
     public function store(AgendaFormRequest $request)
     {
+        // $capa = null;
+        //if($request-file('capa'))
+       // {
+       //     $request->file('capa')->store('agenda');
+      //  }
 
-//        dd($request->all());
         $agenda = agenda::create($request->all());
         $request->session()
             ->flash(
                 'mensagem',
-                "Agenda {$agenda->nome} cadastrado com sucesso "
+                "{$agenda->nome} cadastrado com sucesso! "
             );
-        if ($request->file('photo')->isValid()) {
-            $request->file('photo')->store('imagemusuario');
-        }
+
+
         return redirect('/agenda');
     }
 
+    public function getEdit($id)
+    {
+        $agenda= agenda::find($id);
+        return view('agenda.edit')->with('agenda',$agenda);
+    }
+
+    public function storeEdit(Request $request)
+    {
+        $dados = $request->all();
+
+        $update = agenda::find($dados['id']);
+
+        $update->update($dados);
+
+        $request->session()
+            ->flash(
+                'mensagem',
+                "Contato  atualizado com sucesso! "
+            );
+
+
+        return redirect ('/agenda');
+
+
+    }
+
+    public function update(AgendaFormRequest $request, $id)
+    {
+        $this->agenda->where(['id'=>$id])->update([
+        ]);
+
+        return redirect('/agenda');
+    }
 
     public function destroy (Request $request)
 
@@ -50,7 +92,7 @@ class AgendaController extends Controller
         $request->session()
             ->flash(
                 'mensagem',
-                "Agenda removido com sucesso"
+                "Contato removido com sucesso"
             );
 
         return redirect('/agenda');
